@@ -21,20 +21,25 @@ def login_api(request):
         pythondata = JSONParser().parse(stream)
         # Password is hashed for hash comparison
         paswd = hashlib.sha256(pythondata['pass_1'].encode()).hexdigest()
-        # Validation of credentials
-        if Login.objects.get(Email = pythondata['email']).id == Login.objects.get(pass_1=paswd).id :
-            # Response message to be shown  is converted intp JSON response
-            json_data = JSONRenderer().render({'Success' : 'Login Success'})
-            # Returning a response 
-            return HttpResponse(json_data, content_type='application/json')
-        # If credentials are not found
+        # Checking the existence of email
+        if Login.objects.filter(Email = pythondata['email']).exists() :
+            #validation of credentials
+            if Login.objects.get(Email = pythondata['email']).id == Login.objects.get(pass_1=paswd).id :
+                # Response message to be shown  is converted into JSON response
+                json_data = JSONRenderer().render({'Success' : 'Login Success'})
+			    # Returning a response 
+                return HttpResponse(json_data, content_type='application/json')
+            # If credentials are invalid
+            else :
+                # Response to be shown
+                response = {"Invalid" : "Invalid credentials"}
+                json_data = JSONRenderer().render(response)
+                return HttpResponse(json_data, content_type='application/json')
         else :
-            # Response to be shown
-            response = {"Invalid" : 'Invalid credentials'}
-            # Conversion to JSON response
-            json_data = JSONRenderer().render(response)
-            # Returning the response 
-            return HttpResponse(json_data,content_type='application/json')
+    	    # Response message to be shown  is converted intp JSON response
+    	    json_data = JSONRenderer().render({'Third_party':"You are not registered."})
+    	    # Returning a response 
+    	    return HttpResponse(json_data, content_type='application/json')
     # If request in GET
     else:
         return HttpResponse("You are using login API")
@@ -54,7 +59,7 @@ def registration_api(request):
         # JSON data is converted into python data (Dictionary)
         python_data = JSONParser().parse(stream) 
         # Validation for the existing User
-        if Register.objects.get(email=python_data['email']) is not None: 
+        if Register.objects.filter(email=python_data['email']).exists(): 
             # Converting the response to JSON
             json_data = JSONRenderer().render({'Member' : 'This email is already registered ...'})  
             #  Returning a message on the basis of Validation
